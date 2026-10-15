@@ -15,7 +15,11 @@ function frame(card){
  const media=parseMedia(card.url),f=el('iframe',{title:`${card.name}: ${media.kind} ${media.id}`,src:embedUrl(media),allow:'autoplay; fullscreen; picture-in-picture',allowfullscreen:'',referrerpolicy:'strict-origin-when-cross-origin'});
  f.addEventListener('load',()=>{card.status.textContent='Si no reproduce, presioná Play dentro del video.';});
  card.frame?.remove();card.frame=f;card.player.append(f);card.media=media;
- card.follow.hidden=media.kind!=='kick';card.readChat.hidden=media.kind!=='kick';card.follow.href=media.url;
+ card.follow.hidden=media.kind!=='kick';card.chatPanel.hidden=media.kind!=='kick';card.follow.href=media.url;
+ if(media.kind==='kick'){
+  const chatUrl='https://kick.com/popout/'+media.id+'/chat';
+  if(card.chatFrame.getAttribute('src')!==chatUrl)card.chatFrame.src=chatUrl;
+ }else card.chatFrame.removeAttribute('src');
  card.external.href=media.url;card.badge.textContent=media.kind.toUpperCase();
  card.send.disabled=media.kind!=='kick'||!card.accountId||pending.has(card.id);card.textarea.disabled=media.kind!=='kick';
  card.textarea.placeholder=media.kind==='kick'?'Mensaje para este canal…':'El chat de cuentas está disponible en Kick.';
@@ -29,7 +33,12 @@ function mountCard(card,index){
  const remove=button('×',()=>{if(pending.has(card.id))return notify('Esperá a que termine el envío.');card.scheduler.stop();clearTimeout(card.timer);article.remove();cards=cards.filter(c=>c!==card);save();updateCount();});remove.setAttribute('aria-label','Quitar '+card.name);
  head.append(name,card.badge,remove);
  card.player=el('div',{class:'player'});card.status=el('p',{class:'card-status','aria-live':'polite'},'Preparando reproductor…');
- const tools=el('div',{class:'tools'});card.external=el('a',{target:'_blank',rel:'noopener noreferrer'},'Abrir en origen ↗');card.follow=el('a',{target:'_blank',rel:'noopener noreferrer',title:'Seguir desde Kick con la sesión de ese navegador'},'Seguir en Kick ↗');card.readChat=button('Leer chat ↗',()=>window.open('https://kick.com/'+card.media.id+'/chatroom','mosaico-chat-'+card.media.id,'popup,width=380,height=650'));tools.append(button('Recargar',()=>frame(card)),card.follow,card.readChat,card.external);
+ const tools=el('div',{class:'tools'});card.external=el('a',{target:'_blank',rel:'noopener noreferrer'},'Abrir en origen ↗');card.follow=el('a',{target:'_blank',rel:'noopener noreferrer',title:'Seguir desde Kick con la sesión de ese navegador'},'Seguir en Kick ↗');tools.append(button('Recargar',()=>frame(card)),card.follow,card.external);
+ card.chatPanel=el('section',{class:'live-chat','aria-label':'Chat del canal'});
+ card.chatFrame=el('iframe',{title:'Chat de '+card.name,sandbox:'allow-scripts allow-same-origin',referrerpolicy:'strict-origin-when-cross-origin'});
+ const chatHead=el('div',{class:'live-chat-head'});chatHead.append(el('strong',{},'Chat en vivo'),button('Recargar chat',()=>{if(card.chatFrame.hasAttribute('src'))card.chatFrame.src=card.chatFrame.src;}));
+ const chatViewport=el('div',{class:'chat-viewport'});chatViewport.append(card.chatFrame);
+ card.chatPanel.append(chatHead,chatViewport,el('p',{class:'chat-note'},'Para escribir con tu cuenta seleccionada, usá el formulario de abajo. Podés ajustar la altura desde la esquina del chat.'));
  const form=el('form',{class:'chat'});card.select=el('select',{'aria-label':'Cuenta para enviar',onchange:()=>{card.scheduler.stop();card.accountId=card.select.value;refreshSelect(card);save();}});
  card.textarea=el('textarea',{rows:'2','aria-label':'Mensaje',maxlength:'1000'});card.send=el('button',{type:'submit',class:'primary'},'Enviar');
  const connectButton=button('Conectar cuenta',()=>connect(card));
@@ -39,7 +48,7 @@ function mountCard(card,index){
   catch(error){card.scheduler.stop();card.status.textContent=error.message;}
   finally{pending.delete(card.id);card.select.disabled=false;card.textarea.disabled=card.media.kind!=='kick';card.send.disabled=card.media.kind!=='kick'||!card.accountId;}
  });
- form.append(card.select,connectButton,card.textarea,card.send);article.append(head,card.player,tools,form,automation(card),card.status);grid.append(article);
+ form.append(card.select,connectButton,card.textarea,card.send);article.append(head,card.player,tools,card.chatPanel,form,automation(card),card.status);grid.append(article);
  card.media=parseMedia(card.url);refreshSelect(card);
  card.timer=setTimeout(()=>{if(article.isConnected)frame(card);},index*350);
 }
