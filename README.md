@@ -25,7 +25,10 @@ También podés publicar desde esta carpeta con `npx vercel` y después `npx ver
 - **Abrir en todas** cambia el enlace de las tarjetas; **Agregar pestaña** usa ese enlace. No hay agrupación ni suspensión automática. Los iframes se cargan con un pequeño desfase.
 - Kick: canal o enlace `https://kick.com/canal`. TikTok: enlace completo `https://www.tiktok.com/@usuario/video/ID` (o una publicación de fotos). Para enlaces cortos vm/vt, abrilos en TikTok y copiá el enlace completo.
 - Los videos son reproductores oficiales, no navegadores independientes. Los tokens de las cuentas nunca se inyectan en el reproductor. El botón Enviar usa la API oficial por separado.
-- No incluye lectura del chat en tiempo real, seguir canales, suscripciones, ni mensajes programados. Este alcance es vincular cuentas y enviar manualmente; esas otras funciones necesitan implementación y evaluación específica.
+- Cada tarjeta permite programar un mensaje con intervalo de 5 a 86400 segundos. Se inicia explícitamente, espera el primer intervalo, se pausa al cambiar cuenta/canal, perder internet, recargar o recibir un error; no reintenta envíos inciertos. Mantener la página abierta; los temporizadores pueden retrasarse en segundo plano. Una tarjeta no puede activar su temporizador en dos pestañas del mismo navegador.
+- Tamaños Normal, Compacto y Mini: cambian solo CSS, conservando todos los videos.
+- **Seguir en Kick** abre el canal para seguirlo desde la sesión de Kick del navegador (no la cuenta API seleccionada). **Leer chat** abre el chat oficial en una ventana separada. No se integra lectura dentro de las tarjetas ni seguimiento por API.
+- Esta actualización no requiere SQL, nuevas variables ni volver a vincular cuentas.
 - Kick/TikTok pueden denegar contenido, pedir login o impedir autoplay. Play, sonido y pantalla completa están dentro del reproductor. El enlace **Abrir en origen** permite comprobar el contenido.
 - La reproducción sigue consumiendo recursos de tu PC. No promete menor consumo ni acceso a videos privados.
 - Las tarjetas se guardan por usuario en localStorage; las cuentas se guardan cifradas en Supabase. No existe migración automática de las sesiones del .exe.
