@@ -19,7 +19,6 @@ test('12 persistent players, account selection, send, TikTok switch and reload',
 await first.getByLabel('Cuenta para enviar').selectOption('22222222-2222-4222-8222-222222222222');await first.getByLabel('Mensaje',{exact:true}).fill('Hola desde prueba');await first.getByRole('button',{name:'Enviar',exact:true}).click();await expect(first.locator('.card-status')).toContainText('Enviado como Cuenta Uno');expect(sent).toHaveLength(1);expect(sent[0].channel).toBe('redondofrann');
  await page.getByLabel('Tamaño de las tarjetas').selectOption('mini');
  await expect(page.locator('.grid')).toHaveAttribute('data-size','mini');await expect(page.locator('.player iframe')).toHaveCount(12);
- await expect(first.getByRole('link',{name:'Seguir en Kick'})).toHaveAttribute('href','https://kick.com/redondofrann');
  await first.locator('summary').click();await first.getByLabel('Mensaje automático',{exact:true}).fill('Mensaje programado de prueba');await first.getByLabel('Intervalo en segundos').fill('5');
  await first.getByRole('button',{name:'Iniciar',exact:true}).click();await expect(first.getByRole('button',{name:'Pausar',exact:true})).toBeVisible();
  await expect.poll(()=>sent.length,{timeout:10000}).toBe(2);expect(sent[1].content).toBe('Mensaje programado de prueba');expect(sent[1].accountId).toBe(sent[0].accountId);expect(sent[1].requestId).not.toBe(sent[0].requestId);

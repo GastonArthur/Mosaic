@@ -15,7 +15,7 @@ function frame(card){
  const media=parseMedia(card.url),f=el('iframe',{title:`${card.name}: ${media.kind} ${media.id}`,src:embedUrl(media),allow:'autoplay; fullscreen; picture-in-picture',allowfullscreen:'',referrerpolicy:'strict-origin-when-cross-origin'});
  f.addEventListener('load',()=>{card.status.textContent='Si no reproduce, presioná Play dentro del video.';});
  card.frame?.remove();card.frame=f;card.player.append(f);card.media=media;
- card.follow.hidden=media.kind!=='kick';card.chatPanel.hidden=media.kind!=='kick';card.follow.href=media.url;
+ card.chatPanel.hidden=media.kind!=='kick';
  if(media.kind==='kick'){
   const chatUrl='https://kick.com/popout/'+media.id+'/chat';
   if(card.chatFrame.getAttribute('src')!==chatUrl)card.chatFrame.src=chatUrl;
@@ -33,7 +33,7 @@ function mountCard(card,index){
  const remove=button('×',()=>{if(pending.has(card.id))return notify('Esperá a que termine el envío.');card.scheduler.stop();clearTimeout(card.timer);article.remove();cards=cards.filter(c=>c!==card);save();updateCount();});remove.setAttribute('aria-label','Quitar '+card.name);
  head.append(name,card.badge,remove);
  card.player=el('div',{class:'player'});card.status=el('p',{class:'card-status','aria-live':'polite'},'Preparando reproductor…');
- const tools=el('div',{class:'tools'});card.external=el('a',{target:'_blank',rel:'noopener noreferrer'},'Abrir en origen ↗');card.follow=el('a',{target:'_blank',rel:'noopener noreferrer',title:'Seguir desde Kick con la sesión de ese navegador'},'Seguir en Kick ↗');tools.append(button('Recargar',()=>frame(card)),card.follow,card.external);
+ const tools=el('div',{class:'tools'});card.external=el('a',{target:'_blank',rel:'noopener noreferrer'},'Abrir en origen ↗');tools.append(button('Recargar',()=>frame(card)),card.external);
  card.chatPanel=el('section',{class:'live-chat','aria-label':'Chat del canal'});
  card.chatFrame=el('iframe',{title:'Chat de '+card.name,sandbox:'allow-scripts allow-same-origin',referrerpolicy:'strict-origin-when-cross-origin'});
  const chatHead=el('div',{class:'live-chat-head'});chatHead.append(el('strong',{},'Chat en vivo'),button('Recargar chat',()=>{if(card.chatFrame.hasAttribute('src'))card.chatFrame.src=card.chatFrame.src;}));
