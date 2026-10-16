@@ -19,9 +19,14 @@ test('12 persistent players, account selection, send, TikTok switch and reload',
 await first.getByLabel('Cuenta para enviar').selectOption('22222222-2222-4222-8222-222222222222');await first.getByLabel('Mensaje',{exact:true}).fill('Hola desde prueba');await first.getByRole('button',{name:'Enviar',exact:true}).click();await expect(first.locator('.card-status')).toContainText('Enviado como Cuenta Uno');expect(sent).toHaveLength(1);expect(sent[0].channel).toBe('redondofrann');
  await page.getByLabel('Tamaño de las tarjetas').selectOption('mini');
  await expect(page.locator('.grid')).toHaveAttribute('data-size','mini');await expect(page.locator('.player iframe')).toHaveCount(12);
- await first.locator('summary').click();await first.getByLabel('Mensaje automático',{exact:true}).fill('Mensaje programado de prueba');await first.getByLabel('Intervalo en segundos').fill('5');
+ await first.locator('summary').click();
+ await first.getByRole('button',{name:'Iniciar',exact:true}).click();await expect(first.locator('.auto-status')).toContainText('Falta el texto');
+ await expect(first.getByLabel('Cuenta para enviar')).toHaveValue('22222222-2222-4222-8222-222222222222');
+ await first.getByLabel('Mensaje automático',{exact:true}).fill('Mensaje programado de prueba');await first.getByLabel('Intervalo en segundos').fill('2');
+ await first.getByRole('button',{name:'Iniciar',exact:true}).click();await expect(first.locator('.auto-status')).toContainText('entre 5 y 86400');expect(sent).toHaveLength(1);
+ await first.getByLabel('Intervalo en segundos').fill('10');
  await first.getByRole('button',{name:'Iniciar',exact:true}).click();await expect(first.getByRole('button',{name:'Pausar',exact:true})).toBeVisible();
- await expect.poll(()=>sent.length,{timeout:10000}).toBe(2);expect(sent[1].content).toBe('Mensaje programado de prueba');expect(sent[1].accountId).toBe(sent[0].accountId);expect(sent[1].requestId).not.toBe(sent[0].requestId);
+ await expect.poll(()=>sent.length,{timeout:15000}).toBe(2);expect(sent[1].content).toBe('Mensaje programado de prueba');expect(sent[1].accountId).toBe(sent[0].accountId);expect(sent[1].requestId).not.toBe(sent[0].requestId);
  await first.getByRole('button',{name:'Pausar',exact:true}).click();
  await page.screenshot({path:'test-results/mosaico-desktop.png',fullPage:true});
  await page.locator('#link').fill('https://www.tiktok.com/@scout2015/video/6718335390845095173');await page.getByRole('button',{name:'Abrir en todas'}).click();await expect(page.locator('iframe[src*="tiktok.com"]')).toHaveCount(12,{timeout:10000});await expect(first.getByRole('button',{name:'Enviar',exact:true})).toBeDisabled();await expect(first.locator('.live-chat')).toBeHidden();await expect(first.locator('.chat-viewport iframe')).not.toHaveAttribute('src');

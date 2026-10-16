@@ -58,16 +58,21 @@ function automation(card){
  const seconds=el('input',{type:'number',min:'5',max:'86400',step:'1',value:String(card.autoSeconds||60),'aria-label':'Intervalo en segundos'});
  const state=el('p',{class:'auto-status','aria-live':'polite'},'Pausado'),toggle=button('Iniciar',()=>{
   if(card.scheduler.active){card.scheduler.stop();return;}
-  if(!navigator.onLine||!card.accountId||card.media?.kind!=='kick'||!text.value.trim()){state.textContent='Elegí una cuenta de Kick y escribí el mensaje; necesitás conexión.';return;}
-  if(!seconds.checkValidity()){seconds.reportValidity();return;}
+  if(!navigator.onLine){state.textContent='Sin internet. Recuperá la conexión para iniciar.';return;}
+  if(card.media?.kind!=='kick'){state.textContent='El mensaje automático solo funciona en canales de Kick.';return;}
+  card.accountId=card.select.value;
+  if(!card.accountId){state.textContent='Seleccioná una cuenta en esta tarjeta.';card.select.focus();return;}
+  if(!text.value.trim()){state.textContent='Falta el texto: escribilo en «Mensaje automático». Es distinto del mensaje manual.';text.focus();return;}
+  if(!seconds.checkValidity()){state.textContent='El intervalo debe ser un número entero entre 5 y 86400 segundos.';seconds.focus();return;}
   if(!navigator.locks){state.textContent='Usá Chrome o Edge actualizado para programar mensajes.';return;}
   card.autoText=text.value.trim();card.autoSeconds=Number(seconds.value);save();
-  const owner=session.user.id;
+  const owner=session.user.id;toggle.disabled=true;state.textContent='Iniciando temporizador…';
   navigator.locks.request('mosaico-auto:'+owner+':'+card.id,{ifAvailable:true},async lock=>{
+   toggle.disabled=false;
    if(!lock){state.textContent='Este temporizador ya está activo en otra pestaña.';return;}
    if(!card.article.isConnected||owner!==session?.user.id)return;
    await new Promise(resolve=>{card.releaseAuto=resolve;card.scheduler.start(card.autoSeconds);});
-  }).catch(()=>{card.scheduler.stop();state.textContent='No se pudo iniciar el temporizador.';});
+  }).catch(()=>{toggle.disabled=false;card.scheduler.stop();state.textContent='El navegador no permitió iniciar el temporizador. Probá recargar esta página.';});
  });
  card.scheduler=createScheduler({send:async()=>{
   if(!navigator.onLine||!card.article.isConnected)throw Error('Sin conexión. Reiniciá cuando estés listo.');
@@ -82,7 +87,7 @@ function automation(card){
   if(!active){card.releaseAuto?.();card.releaseAuto=null;}
  }});
  for(const field of [text,seconds])field.addEventListener('change',()=>{card.autoText=text.value;card.autoSeconds=Number(seconds.value)||60;save();});
- details.append(summary,text,el('span',{},'Intervalo (segundos)'),seconds,toggle,state,el('small',{},'Funciona con esta página abierta. Al recargar queda pausado. El navegador puede retrasar envíos en segundo plano.'));
+ details.append(summary,text,el('span',{},'Intervalo (segundos, mínimo 5)'),seconds,toggle,state,el('small',{},'Funciona con esta página abierta. Al recargar queda pausado. El navegador puede retrasar envíos en segundo plano.'));
  return details;
 }
 function updateCount(){document.querySelector('#count').textContent=`${cards.length} / 12 pestañas`;adding.disabled=cards.length>=12;}
