@@ -21,3 +21,14 @@ test('does not catch up missed intervals and validates bounds',async()=>{
  const f=fixture(async()=>{});assert.throws(()=>f.scheduler.start(0));assert.throws(()=>f.scheduler.start(Infinity));
  f.scheduler.start(5);await f.tick();assert.equal(f.tasks.size,1);assert.equal([...f.tasks.values()][0].ms,5000);f.scheduler.stop();
 });
+
+test('remaining time follows the deadline and resets after each send',async()=>{
+ let time=1000,tick,finish;
+ const scheduler=createScheduler({now:()=>time,send:()=>new Promise(resolve=>finish=resolve),changed:()=>{},setTimer:fn=>{tick=fn;return 1;},clearTimer:()=>{}});
+ scheduler.start(10);assert.equal(scheduler.remaining,10);
+ time+=3400;assert.equal(scheduler.remaining,7);
+ time+=10000;assert.equal(scheduler.remaining,0);
+ const pending=tick();assert.equal(scheduler.remaining,null);
+ finish();await pending;assert.equal(scheduler.remaining,10);
+ scheduler.stop();assert.equal(scheduler.remaining,null);
+});

@@ -56,6 +56,8 @@ function automation(card){
  const details=el('details',{class:'automation'}),summary=el('summary',{},'Mensaje automático');
  const text=el('textarea',{'aria-label':'Mensaje automático',rows:'2',maxlength:'1000',placeholder:'Mensaje que se repetirá…'});text.value=card.autoText||'';
  const seconds=el('input',{type:'number',min:'5',max:'86400',step:'1',value:String(card.autoSeconds||60),'aria-label':'Intervalo en segundos'});
+ const countdown=el('p',{class:'auto-countdown','aria-live':'off'},'');let countdownTimer;
+ const updateCountdown=()=>{const remaining=card.scheduler.remaining;const label=remaining===null?'Enviando…':'Próximo envío en '+remaining+' s';if(countdown.textContent!==label)countdown.textContent=label;};
  const state=el('p',{class:'auto-status','aria-live':'polite'},'Pausado'),toggle=button('Iniciar',()=>{
   if(card.scheduler.active){card.scheduler.stop();return;}
   if(!navigator.onLine){state.textContent='Sin internet. Recuperá la conexión para iniciar.';return;}
@@ -79,15 +81,16 @@ function automation(card){
   if(pending.has(card.id))return;
   const accountId=card.accountId,channel=card.media.id;
   pending.add(card.id);card.send.disabled=true;card.select.disabled=true;
-  try{await api('send',{accountId,channel,content:card.autoText,requestId:crypto.randomUUID()});state.textContent='Último envío: '+new Date().toLocaleTimeString()+'. Próximo en '+card.autoSeconds+' s.';}
+  try{await api('send',{accountId,channel,content:card.autoText,requestId:crypto.randomUUID()});state.textContent='Último envío: '+new Date().toLocaleTimeString()+'.';}
   finally{pending.delete(card.id);card.select.disabled=false;card.send.disabled=card.media?.kind!=='kick'||!card.accountId;}
  },changed:(active,error)=>{
+  clearInterval(countdownTimer);if(active){updateCountdown();countdownTimer=setInterval(updateCountdown,250);}else countdown.textContent='';
   toggle.textContent=active?'Pausar':'Iniciar';text.disabled=seconds.disabled=active;
-  state.textContent=active?'Activo · primer envío en '+card.autoSeconds+' s.':error?'Pausado: '+error.message:'Pausado';
+  state.textContent=active?'Temporizador activo.':error?'Pausado: '+error.message:'Pausado';
   if(!active){card.releaseAuto?.();card.releaseAuto=null;}
  }});
  for(const field of [text,seconds])field.addEventListener('change',()=>{card.autoText=text.value;card.autoSeconds=Number(seconds.value)||60;save();});
- details.append(summary,text,el('span',{},'Intervalo (segundos, mínimo 5)'),seconds,toggle,state,el('small',{},'Funciona con esta página abierta. Al recargar queda pausado. El navegador puede retrasar envíos en segundo plano.'));
+ details.append(summary,text,el('span',{},'Intervalo (segundos, mínimo 5)'),seconds,toggle,countdown,state,el('small',{},'Funciona con esta página abierta. Al recargar queda pausado. El navegador puede retrasar envíos en segundo plano.'));
  return details;
 }
 function updateCount(){document.querySelector('#count').textContent=`${cards.length} / 12 pestañas`;adding.disabled=cards.length>=12;}
