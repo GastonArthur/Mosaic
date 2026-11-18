@@ -24,7 +24,7 @@ function frame(card){
  card.send.disabled=media.kind!=='kick'||!card.accountId||pending.has(card.id);card.textarea.disabled=media.kind!=='kick';
  card.textarea.placeholder=media.kind==='kick'?'Mensaje para este canal…':'El chat de cuentas está disponible en Kick.';
 }
-function refreshSelect(card){const selected=card.accountId;card.select.replaceChildren(el('option',{value:''},'Seleccionar cuenta'));for(const a of accounts)card.select.append(el('option',{value:a.id},a.name));card.select.value=accounts.some(a=>a.id===selected)?selected:'';card.accountId=card.select.value;card.send.disabled=card.media?.kind!=='kick'||!card.accountId;}
+function refreshSelect(card){const selected=card.accountId;card.select.replaceChildren(el('option',{value:''},'Seleccionar cuenta'));for(const a of accounts)card.select.append(el('option',{value:a.id},a.name));card.select.value=accounts.some(a=>a.id===selected)?selected:'';card.accountId=card.select.value;card.send.disabled=card.media?.kind!=='kick'||!card.accountId;if(card.connectButton)card.connectButton.style.display=card.accountId?'none':'';}
 async function connect(card){try{if(pending.size)throw Error('Esperá a que termine el envío antes de conectar otra cuenta.');if(card)sessionStorage.setItem('mosaico-connect-card',card.id);else sessionStorage.removeItem('mosaico-connect-card');notify('Abriendo la autorización de Kick…');const {url}=await api('connect',{});window.location.assign(url);}catch(e){notify(e.message);}}
 function mountCard(card,index){
  const article=el('article',{class:'card'}),head=el('header',{class:'card-head'});card.article=article;
@@ -41,7 +41,7 @@ function mountCard(card,index){
  card.chatPanel.append(chatHead,chatViewport,el('p',{class:'chat-note'},'Para escribir con tu cuenta seleccionada, usá el formulario de abajo. Podés ajustar la altura desde la esquina del chat.'));
  const form=el('form',{class:'chat'});card.select=el('select',{'aria-label':'Cuenta para enviar',onchange:()=>{card.scheduler.stop();card.accountId=card.select.value;refreshSelect(card);save();}});
  card.textarea=el('textarea',{rows:'2','aria-label':'Mensaje',maxlength:'1000'});card.send=el('button',{type:'submit',class:'primary'},'Enviar');
- const connectButton=button('Conectar cuenta',()=>connect(card));
+ const connectButton=button('Conectar cuenta',()=>connect(card));card.connectButton=connectButton;
  form.addEventListener('submit',async e=>{e.preventDefault();if(pending.has(card.id)||!card.accountId||card.media.kind!=='kick')return;const content=card.textarea.value;if(!content.trim())return;
   const accountId=card.accountId,channel=card.media.id;pending.add(card.id);card.send.disabled=true;card.select.disabled=true;card.textarea.disabled=true;card.status.textContent='Enviando…';
   try{await api('send',{accountId,channel,content,requestId:crypto.randomUUID()});card.textarea.value='';card.status.textContent='Enviado como '+(accounts.find(a=>a.id===accountId)?.name||'tu cuenta')+'.';}
